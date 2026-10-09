@@ -1,6 +1,9 @@
-
+﻿
 from datetime import datetime, timezone
-from history import assess_with_history
+if __package__:
+    from .history import assess_with_history
+else:
+    from history import assess_with_history
 
 TREND_DELTA = 5
 _LOG = {}
@@ -51,3 +54,4 @@ def assess_with_trend(data: dict) -> dict:
         "score": score,
     })
     return result
+

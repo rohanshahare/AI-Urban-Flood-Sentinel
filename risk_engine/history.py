@@ -1,8 +1,11 @@
-
+﻿
 import csv
 from pathlib import Path
 
-from engine import assess_flood_risk
+if __package__:
+    from .engine import assess_flood_risk
+else:
+    from engine import assess_flood_risk
 
 CSV_PATH = (
     Path(__file__).parent
@@ -68,3 +71,4 @@ def assess_with_history(data: dict) -> dict:
             data["data_source"] = record["data_source"]
 
     return assess_flood_risk(data)
+

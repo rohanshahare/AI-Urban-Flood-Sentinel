@@ -1,5 +1,5 @@
-
-from config import (
+﻿
+from .config import (
     WEIGHTS,
     RAIN_VALUE,
     RAIN_ORDER,
@@ -14,7 +14,7 @@ from config import (
     DEFAULT_RAIN_IF_MISSING,
 )
 
-from normalise import (
+from .normalise import (
     is_number,
     normalize_blockage,
     normalize_rainfall,
@@ -185,3 +185,4 @@ def assess_flood_risk(data: dict) -> dict:
     })
 
     return result
+

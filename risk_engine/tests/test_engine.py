@@ -4,7 +4,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
-from engine import assess_flood_risk as run
+from risk_engine.engine import assess_flood_risk as run
 
 def test_all():
     r = run({"drain_id": "A", "blockage_percentage": 15, "rainfall": 10, "history": "LOW"})

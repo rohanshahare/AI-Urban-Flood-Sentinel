@@ -1,5 +1,8 @@
-
-from config import RAIN_BANDS, RAIN_VALUE, HISTORY_VALUE
+﻿
+if __package__:
+    from .config import RAIN_BANDS, RAIN_VALUE, HISTORY_VALUE
+else:
+    from config import RAIN_BANDS, RAIN_VALUE, HISTORY_VALUE
 
 
 def is_number(value):
@@ -46,3 +49,4 @@ def normalize_history(value):
 
     category = value.strip().upper()
     return HISTORY_VALUE.get(category)
+

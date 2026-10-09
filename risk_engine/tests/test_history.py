@@ -4,7 +4,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
-from history import assess_with_history, vulnerability_label
+from risk_engine.history import assess_with_history, vulnerability_label
 
 
 def test_history():
