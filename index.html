@@ -2,190 +2,169 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Maverick REVA</title>
-    <!-- Leaflet CSS -->
-    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin="" />
-    <!-- Tailwind CSS -->
-    <script src="https://cdn.tailwindcss.com"></script>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>AI Urban Flood Sentinel</title>
+    <meta name="description" content="AI-assisted drain inspection: image-based blockage assessment and explainable flood-risk triage.">
+    <!-- Leaflet (CDN). Everything else is local; the dashboard still works if Leaflet cannot load. -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
     <link rel="stylesheet" href="css/styles.css">
 </head>
-<body class="bg-gray-100 flex flex-col h-screen">
+<body>
 
-    <!-- ── Dev Tools (mock only, hidden before demo) ───────────────────────── -->
-    <div id="dev-tools" class="hidden fixed bottom-4 right-4 bg-white p-4 shadow-lg rounded border border-gray-300 z-[9999]">
-        <h3 class="font-bold mb-2 text-sm text-gray-800">Dev Tools (Mock Mode)</h3>
-        <select id="fixture-select" class="border border-gray-300 p-2 text-sm rounded w-full bg-white text-black">
-            <option value="drains">All Drains (drains.json)</option>
-            <option value="completed-low">Completed: Low</option>
-            <option value="completed-critical">Completed: Critical</option>
+    <header class="app-header">
+        <div class="brand">
+            <div class="brand-mark" aria-hidden="true">
+                <svg viewBox="0 0 24 24" fill="none" stroke="#7dd3fc" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M12 3c-3.2 4.4-6 7.6-6 11a6 6 0 0 0 12 0c0-3.4-2.8-6.6-6-11z"/><path d="M9 14h6M9 17h6"/>
+                </svg>
+            </div>
+            <div>
+                <h1>AI Urban Flood Sentinel</h1>
+                <p>Drain-inspection triage · image-based blockage assessment + explainable flood-risk scoring · experimental, not a flood forecast</p>
+            </div>
+        </div>
+        <div class="header-status">
+            <span id="demo-badge" class="mode-badge hidden" title="Opened with ?mock=1: synthetic fixtures, no model or backend calls">Mock data</span>
+            <span class="health" role="status"><span id="health-dot" class="health-dot"></span><span id="health-label">Checking backend…</span></span>
+        </div>
+    </header>
+
+    <!-- Shown only when the backend reports a triggered alert for the result on screen -->
+    <div id="alert-banner" class="alert-banner hidden" role="alert"></div>
+
+    <section class="overview" aria-label="Drain overview">
+        <div class="kpis">
+            <div class="kpi" id="kpi-box-total"><span class="kpi-label">Drains</span><span class="kpi-value" id="kpi-total">–</span></div>
+            <div class="kpi risk-CRITICAL" id="kpi-box-critical"><span class="kpi-label">Critical</span><span class="kpi-value" id="kpi-critical">–</span></div>
+            <div class="kpi risk-HIGH" id="kpi-box-high"><span class="kpi-label">High</span><span class="kpi-value" id="kpi-high">–</span></div>
+            <div class="kpi risk-MODERATE" id="kpi-box-moderate"><span class="kpi-label">Moderate</span><span class="kpi-value" id="kpi-moderate">–</span></div>
+            <div class="kpi risk-LOW" id="kpi-box-low"><span class="kpi-label">Low</span><span class="kpi-value" id="kpi-low">–</span></div>
+            <div class="kpi risk-UNKNOWN" id="kpi-box-inconclusive"><span class="kpi-label">Needs inspection</span><span class="kpi-value" id="kpi-inconclusive">–</span></div>
+        </div>
+        <p id="kpi-note" class="overview-note">Loading drain records…</p>
+    </section>
+
+    <div class="workspace">
+
+        <!-- Left: analyse an image, result details, what-if -->
+        <aside class="col col-left" aria-label="Analysis">
+            <section class="panel">
+                <h2 class="panel-title">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 16V4M7 9l5-5 5 5M4 20h16"/></svg>
+                    Analyse a drain image
+                </h2>
+                <form id="upload-form" novalidate>
+                    <label class="dropzone" id="dropzone" for="upload-image">
+                        <input type="file" id="upload-image" class="visually-hidden" accept="image/jpeg,image/png,image/webp,image/gif,image/bmp">
+                        <img id="image-preview" class="hidden" alt="Selected drain image">
+                        <span id="dropzone-empty">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="2"/><circle cx="9" cy="10" r="1.6"/><path d="M21 16l-5-5-8 8"/></svg>
+                            <strong>Choose a drain photo</strong>
+                            <small>or drop it here</small><small>JPEG, PNG, WebP, GIF or BMP · up to 10 MB</small>
+                        </span>
+                        <span id="file-meta" class="file-meta hidden"></span>
+                    </label>
+                    <div class="sample-row">
+                        Try a sample:
+                        <button type="button" id="sample-blocked" class="btn-link">Blocked drain</button>
+                        <button type="button" id="sample-clear" class="btn-link">Clear drain</button>
+                    </div>
+
+                    <label class="field">
+                        <span class="field-label">Drain ID <small>(optional; needed to list and map the result)</small></span>
+                        <input id="drain-id" class="input" list="drain-ids" autocomplete="off" placeholder="e.g. DEMO-1">
+                        <datalist id="drain-ids"></datalist>
+                    </label>
+
+                    <details class="more">
+                        <summary>Location and rainfall (optional)</summary>
+                        <div class="grid-2">
+                            <label class="field"><span class="field-label">Latitude</span><input id="lat" class="input" inputmode="decimal"></label>
+                            <label class="field"><span class="field-label">Longitude</span><input id="lon" class="input" inputmode="decimal"></label>
+                        </div>
+                        <p>Click the map to fill these in. Left blank, no location is invented.</p>
+                        <label class="field"><span class="field-label">Rainfall (mm/day)</span><input id="rainfall" class="input" inputmode="decimal"></label>
+                        <p>There is no live rainfall feed. Left blank, a cautious default is assumed and labelled.</p>
+                    </details>
+
+                    <p id="form-message" class="form-message hidden" role="alert"></p>
+                    <button type="submit" id="submit-btn" class="btn btn-primary" disabled>Run analysis</button>
+                    <p id="submit-hint" class="submit-hint">Choose an image to enable analysis.</p>
+                </form>
+            </section>
+
+            <section class="panel" aria-live="polite">
+                <h2 class="panel-title">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 3h7l5 5v13H8z"/><path d="M15 3v5h5M11 13h6M11 17h4"/></svg>
+                    Analysis details
+                </h2>
+                <div id="detail-waiting" class="state-empty">Select a drain on the map or in the queue, or analyse an image.</div>
+                <div id="detail-loading" class="state-loading hidden"><span class="spinner dark" aria-hidden="true"></span><p>Working…</p></div>
+                <div id="detail-error" class="hidden">
+                    <div class="state-error">
+                        <h3>Processing error</h3>
+                        <div class="code" id="detail-error-code"></div>
+                        <p id="detail-error-message"></p>
+                        <button id="detail-error-retry" type="button" class="btn btn-danger">Retry</button>
+                    </div>
+                </div>
+                <div id="detail-body" class="hidden"></div>
+            </section>
+
+            <section id="sim-panel" class="panel sim hidden" aria-live="polite">
+                <h2 class="panel-title">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M4 7h9M17 7h3M4 17h3M11 17h9"/><circle cx="15" cy="7" r="2"/><circle cx="9" cy="17" r="2"/></svg>
+                    What-if simulator <span class="hypo-tag">HYPOTHETICAL</span>
+                </h2>
+                <p class="sim-intro">Re-scores this drain with different blockage or rainfall using the same risk engine. Not a forecast; never raises an alert; the real result is not changed.</p>
+                <label class="slider"><span class="slider-head">Blockage <span><output id="sim-blockage-out"></output>%</span></span>
+                    <input type="range" id="sim-blockage" min="0" max="100" step="1" aria-label="Hypothetical blockage, percent"></label>
+                <label class="slider"><span class="slider-head">Rainfall <span><output id="sim-rain-out"></output> mm/day</span></span>
+                    <input type="range" id="sim-rain" min="0" max="250" step="1" aria-label="Hypothetical rainfall, millimetres per day"></label>
+                <div class="sim-actions">
+                    <button id="sim-run" type="button" class="btn btn-hypo">Run scenario</button>
+                    <button id="sim-reset" type="button" class="btn btn-secondary">Reset to baseline</button>
+                </div>
+                <div id="sim-result" class="sim-result"></div>
+            </section>
+        </aside>
+
+        <main class="col col-map" aria-label="Drain map">
+            <div id="map"></div>
+        </main>
+
+        <!-- Right: inspection queue (every drain, including those without coordinates) -->
+        <aside class="col col-right" aria-label="Inspection queue">
+            <section class="panel">
+                <h2 class="panel-title">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M9 6h11M9 12h11M9 18h11M4 6h.01M4 12h.01M4 18h.01"/></svg>
+                    Inspection queue
+                </h2>
+                <p class="panel-hint">Ordered by the backend risk level. Flags show what each level rests on.</p>
+                <div id="drain-list"><p class="state-empty">Loading…</p></div>
+            </section>
+        </aside>
+    </div>
+
+    <footer class="app-footer">
+        Scores are experimental composite estimates, not flood probabilities. Sample images:
+        <a href="samples/sources.md" target="_blank" rel="noopener">sources and licences</a>.
+    </footer>
+
+    <!-- Mock-mode controls: shown only when the page is opened with ?mock=1 -->
+    <div id="dev-tools" class="dev-tools hidden">
+        <h3>Mock mode (synthetic fixtures)</h3>
+        <label for="fixture-select" class="field-label">Fixture to show / return from "Run analysis"</label>
+        <select id="fixture-select" class="input">
+            <option value="drains">All drains (drains.json)</option>
+            <option value="completed-low">Completed: low</option>
+            <option value="completed-critical">Completed: critical</option>
             <option value="inconclusive">Inconclusive</option>
             <option value="error">Error</option>
         </select>
     </div>
 
-    <!-- ── Alert Banner (starts hidden; only shown after analyze() returns triggered:true) -->
-    <div id="alert-banner" class="hidden w-full bg-red-600 text-white px-4 py-3 text-center font-bold shadow-md z-50 text-sm"></div>
-
-    <!-- ── Header ─────────────────────────────────────────────────────────── -->
-    <header class="w-full bg-gray-900 text-white px-6 py-3 flex items-center justify-between shadow z-20 flex-shrink-0">
-        <div class="flex items-center gap-3">
-            <span class="font-bold text-lg tracking-wide">Maverick REVA</span>
-            <!-- DEMO badge: visible only when USE_MOCK = true -->
-            <span id="demo-badge" class="hidden bg-yellow-400 text-yellow-900 text-xs font-bold px-2 py-0.5 rounded uppercase tracking-wider">
-                DEMO / SYNTHETIC DATA
-            </span>
-        </div>
-        <div class="flex items-center text-xs text-gray-300">
-            <span id="health-dot" class="w-2.5 h-2.5 rounded-full bg-gray-500 inline-block mr-1.5"></span>
-            <span id="health-label">checking…</span>
-        </div>
-    </header>
-
-    <!-- ── KPI Strip ──────────────────────────────────────────────────────── -->
-    <div class="w-full bg-white shadow px-4 py-3 flex justify-around items-center border-b overflow-x-auto flex-shrink-0">
-        <div class="text-center min-w-[70px]">
-            <div class="text-xs text-gray-500 uppercase tracking-wider">Total</div>
-            <div id="kpi-total" class="text-2xl font-bold text-gray-800">0</div>
-        </div>
-        <div class="text-center min-w-[70px]">
-            <div class="text-xs text-gray-500 uppercase tracking-wider">Critical</div>
-            <div id="kpi-critical" class="text-2xl font-bold text-red-600">0</div>
-        </div>
-        <div class="text-center min-w-[70px]">
-            <div class="text-xs text-gray-500 uppercase tracking-wider">High</div>
-            <div id="kpi-high" class="text-2xl font-bold text-orange-500">0</div>
-        </div>
-        <div class="text-center min-w-[70px]">
-            <div class="text-xs text-gray-500 uppercase tracking-wider">Moderate</div>
-            <div id="kpi-moderate" class="text-2xl font-bold text-yellow-500">0</div>
-        </div>
-        <div class="text-center min-w-[70px]">
-            <div class="text-xs text-gray-500 uppercase tracking-wider">Low</div>
-            <div id="kpi-low" class="text-2xl font-bold text-green-600">0</div>
-        </div>
-        <div class="text-center min-w-[100px]">
-            <div class="text-xs text-gray-500 uppercase tracking-wider">Needs Insp.</div>
-            <div id="kpi-inconclusive" class="text-2xl font-bold text-gray-500">0</div>
-        </div>
-    </div>
-
-    <!-- ── Main Content ───────────────────────────────────────────────────── -->
-    <div class="flex-1 flex overflow-hidden">
-
-        <!-- Sidebar -->
-        <div class="w-96 bg-white shadow-lg z-10 flex flex-col overflow-y-auto border-r flex-shrink-0">
-
-            <!-- Upload Panel -->
-            <div class="p-5 border-b bg-gray-50 flex-shrink-0">
-                <h2 class="text-base font-bold mb-3 text-gray-800">Analyze Drain Image</h2>
-                <form id="upload-form" class="space-y-3">
-
-                    <!-- Drain ID: Auto or manual -->
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-1">Drain ID</label>
-                        <select id="drain-id-toggle" class="block w-full border-gray-300 rounded-md shadow-sm p-2 border bg-white text-sm">
-                            <option value="">Auto / none (new image)</option>
-                            <!-- Mock sentinels for dev testing -->
-                            <option value="D-001">D-001</option>
-                            <option value="critical">D-CRIT (mock critical)</option>
-                            <option value="inconclusive">D-INC (mock inconclusive)</option>
-                            <option value="error">D-ERR (mock error)</option>
-                            <option value="manual">Enter manually…</option>
-                        </select>
-                        <input type="text" id="drain-id-manual" placeholder="e.g. D-042"
-                            class="hidden mt-2 block w-full border-gray-300 rounded-md shadow-sm p-2 border text-sm">
-                    </div>
-
-                    <!-- Image picker + preview -->
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-1">Select Image</label>
-                        <input type="file" id="upload-image"
-                            class="block w-full text-sm text-gray-500 file:mr-3 file:py-1.5 file:px-3 file:rounded file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
-                            accept="image/*">
-                        <img id="image-preview" class="hidden mt-2 rounded border border-gray-200 max-h-36 w-full object-cover" alt="Preview">
-                    </div>
-
-                    <button type="submit"
-                        class="w-full bg-blue-600 text-white py-2 px-4 rounded hover:bg-blue-700 font-semibold shadow-sm transition-colors text-sm">
-                        Run Analysis
-                    </button>
-                </form>
-            </div>
-
-            <!-- Detail Panel -->
-            <div class="p-5 flex-1">
-                <h2 class="text-base font-bold mb-3 text-gray-800">Analysis Details</h2>
-
-                <!-- State: Waiting -->
-                <div id="detail-waiting" class="text-gray-400 text-center py-10 text-sm">
-                    <p>Select a drain on the map or run an analysis to view results.</p>
-                </div>
-
-                <!-- State: Loading -->
-                <div id="detail-loading" class="hidden text-blue-600 text-center py-12">
-                    <p class="animate-pulse font-semibold text-base">Analyzing image…</p>
-                </div>
-
-                <!-- State: Success -->
-                <div id="detail-success" class="hidden space-y-3">
-                    <div class="bg-white p-4 rounded shadow-sm border border-gray-200">
-                        <div class="flex justify-between items-center mb-3">
-                            <h3 class="font-bold text-lg text-gray-800" id="detail-drain-id">—</h3>
-                            <span id="detail-level-badge" class="px-2 py-1 text-xs font-bold rounded text-white bg-gray-400">—</span>
-                        </div>
-                        <!-- DEMO/Synthetic badge shown per-result -->
-                        <div id="detail-synthetic-badge" class="hidden mb-3">
-                            <span class="bg-yellow-100 text-yellow-800 text-xs font-semibold px-2 py-0.5 rounded">DEMO / SYNTHETIC DATA</span>
-                        </div>
-                        <div class="space-y-1.5 text-sm">
-                            <p class="flex justify-between text-gray-600">
-                                <span>Risk Score</span>
-                                <span id="detail-score" class="font-mono font-medium text-gray-800"></span>
-                            </p>
-                            <p class="flex justify-between text-gray-600">
-                                <span>Confidence</span>
-                                <span id="detail-confidence" class="font-mono font-medium text-gray-800"></span>
-                            </p>
-                        </div>
-                        <div class="mt-3 pt-3 border-t">
-                            <p class="text-xs font-semibold text-gray-600 mb-1 uppercase tracking-wide">Recommendation</p>
-                            <p class="text-sm text-gray-700" id="detail-recommendation"></p>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- State: Inconclusive -->
-                <div id="detail-inconclusive" class="hidden">
-                    <div class="bg-gray-100 p-4 rounded border border-gray-300">
-                        <h3 class="font-bold text-gray-800 mb-1">Inconclusive Result</h3>
-                        <p class="text-sm font-semibold text-gray-700 mb-2">Manual inspection required</p>
-                        <p class="text-sm text-gray-600" id="detail-inconclusive-recommendation"></p>
-                    </div>
-                </div>
-
-                <!-- State: Error -->
-                <div id="detail-error" class="hidden">
-                    <div class="bg-red-50 p-4 rounded border border-red-200">
-                        <h3 class="font-bold text-red-700 mb-2">Processing Error</h3>
-                        <p class="text-sm text-red-600 mb-4" id="detail-error-message"></p>
-                        <button id="detail-error-retry"
-                            class="bg-red-600 text-white py-1.5 px-4 rounded text-sm hover:bg-red-700 font-semibold">
-                            Retry
-                        </button>
-                    </div>
-                </div>
-
-            </div>
-        </div>
-
-        <!-- Map -->
-        <div id="map" class="flex-1 relative z-0"></div>
-    </div>
-
-    <!-- Leaflet JS -->
-    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin=""></script>
-
-    <!-- App Entry Point -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
     <script type="module" src="js/main.js"></script>
 </body>
 </html>

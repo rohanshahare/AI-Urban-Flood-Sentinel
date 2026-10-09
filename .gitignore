@@ -27,3 +27,6 @@ uploads/
 tmp/
 .DS_Store
 Thumbs.db
+
+# Vision evaluation output (contains local image paths)
+eval_results*.jsonl

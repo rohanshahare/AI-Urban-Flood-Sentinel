@@ -225,6 +225,8 @@ def analyze_drain(
     }
     if not required.issubset(result):
         raise VisionServiceError("Model response is missing required analysis fields.")
+    if not isinstance(result["drain_visible"], bool):
+        raise VisionServiceError("Model returned an invalid drain_visible value.")
     if not isinstance(result["blockage_detected"], bool):
         raise VisionServiceError("Model returned an invalid blockage_detected value.")
     if not isinstance(result["assessment_uncertain"], bool):

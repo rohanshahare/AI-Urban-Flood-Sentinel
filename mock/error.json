@@ -1,22 +1,51 @@
 {
-  "drain_id": "D-ERR",
-  "timestamp": "2026-10-09T10:15:00Z",
-  "location": { "lat": 12.974598, "lng": 77.597562 },
-  "method": "DEMO",
   "processing_status": "error",
-  "result": {
-    "score": null,
-    "level": null,
-    "confidence": null
+  "vision": {
+    "drain_id": null,
+    "blockage_detected": null,
+    "blockage_percentage": null,
+    "confidence": null,
+    "location": null,
+    "timestamp": null,
+    "method": null,
+    "warnings": []
   },
-  "recommendation": null,
+  "risk": {
+    "flood_risk_score": null,
+    "risk_level": null,
+    "risk_factors": [],
+    "recommendation": null,
+    "warnings": [],
+    "trend": {
+      "direction": "UNKNOWN",
+      "change": null,
+      "previous_score": null
+    },
+    "inputs": null
+  },
+  "rainfall": null,
   "alert": {
-    "triggered": false,
-    "reason": null
+    "level": null,
+    "title": null,
+    "message": null,
+    "recommendation": null,
+    "triggered": false
+  },
+  "drain": {
+    "drain_id": "D-ERR",
+    "lat": null,
+    "lon": null,
+    "processing_status": "error",
+    "risk_level": null,
+    "flood_risk_score": null,
+    "blockage_percentage": null,
+    "synthetic": false,
+    "recommendation": null,
+    "rainfall_source": null,
+    "synthetic_history": null
   },
   "error": {
-    "code": "500",
-    "message": "Failed to process image data from camera."
+    "code": "VISION_SERVICE_ERROR",
+    "message": "Mock fixture: the vision service is unavailable."
   }
 }
-

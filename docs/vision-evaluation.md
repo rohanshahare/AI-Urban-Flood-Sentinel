@@ -53,3 +53,8 @@ The script checks that inference returns the expected machine-readable fields an
 - Image lighting, angle, occlusion, reflections, and drain design may affect results.
 - The current input check recognizes common image file signatures but does not fully decode the image before sending it to Ollama.
 - Do not claim validated city-wide accuracy or exact flood prediction. Position this component as visual maintenance triage that can contribute evidence to a separate downstream risk engine.
+
+## Systematic evaluation
+
+For a labelled dataset, use `scripts/evaluate_vision.py`; method and reporting rules are in `docs/evaluation-plan.md`.
+No labelled dataset ships with the repository, so no accuracy figures exist.

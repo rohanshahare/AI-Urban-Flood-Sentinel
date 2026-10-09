@@ -87,6 +87,12 @@ class DrainAnalysisTests(unittest.TestCase):
             with self.assertRaises(VisionServiceError):
                 analyze_drain(tiny_png_bytes())
 
+    def test_non_boolean_drain_visible_is_rejected(self):
+        # A string "false" is truthy; accepting it would turn "drain not visible" into a scored positive.
+        with patch("vision.drain_analysis._call_ollama", return_value=valid_model_result(drain_visible="false")):
+            with self.assertRaisesRegex(VisionServiceError, "drain_visible"):
+                analyze_drain(tiny_png_bytes())
+
     def test_service_failure_propagates_clear_error(self):
         with patch("vision.drain_analysis._call_ollama", side_effect=VisionServiceError("Ollama unavailable")):
             with self.assertRaisesRegex(VisionServiceError, "unavailable"):
