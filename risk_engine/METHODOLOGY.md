@@ -6,7 +6,9 @@ historical vulnerability. It is an experimental heuristic, **not** a calibrated 
 ## Method
 
 1. Normalise inputs: blockage % to 0-1; rainfall (mm/day or category) to a band value; history category to a value.
-2. Weighted score: blockage 45%, rainfall 35%, history 20% (`config.py`), scaled to 0-100 and rounded.
+2. Weighted score: blockage 45%, rainfall 35%, history 20% (`config.py`), scaled to 0-100. Computed with exact
+   decimal arithmetic and rounded half up (float arithmetic used to round exact x.5 scores inconsistently, which
+   could flip a score across a level boundary; `tests/test_engine.py` checks every input combination against an independent calculation).
 3. Level from score: `<=25` LOW, `<=50` MODERATE, `<=75` HIGH, else CRITICAL. A score of 52 is HIGH.
 4. Recommendation per level.
 5. Warnings for assumed/invalid inputs, low confidence and synthetic data. `inputs` reports where rainfall and history came from.
@@ -19,6 +21,15 @@ historical vulnerability. It is an experimental heuristic, **not** a calibrated 
 | < 115.6 | HEAVY | 0.8 |
 | < 204.5 | VERY_HEAVY | 1.0 |
 | above | EXTREMELY_HEAVY | 1.0 |
+
+## Why half-up rounding
+
+The old `int(round(float_score))` rounded exact .5 scores inconsistently because of float representation: exactly 50.5
+(10% blockage, HEAVY rain, HIGH history) became 50 (MODERATE), while exactly 25.5 and 75.5 rounded up (26 MODERATE,
+76 CRITICAL). Exact `Fraction` arithmetic with half-up is deterministic and resolves every tie toward the higher score,
+the cautious direction for triage. Non-tie scores are unchanged. Levels are still hard thresholds, so a small input
+change near a boundary can change the level (9.9% vs 10% blockage in the case above: 50 MODERATE vs 51 HIGH); the
+dashboard always shows the score beside the level.
 
 ## Missing and invalid data
 
@@ -41,6 +52,19 @@ guard in case weights or thresholds are retuned, and is tested by retuning the w
 `data/synthetic_history.csv` holds invented per-drain records (previous floods, past blockages, low-lying).
 Points: `min(floods, 2) + low_lying + (blockages >= 4)`; 3+ HIGH, 2 MEDIUM, else LOW. Every row is labelled
 `SYNTHETIC`, and results using it carry a warning. No real flood records are included.
+
+## What-if simulation
+
+`what_if.simulate(baseline, scenario)` scores a drain as-is and with some inputs overridden, through the same
+`assess_with_history` path, and returns both results plus the score delta, level change and changed inputs.
+It never reads or writes the trend log. The API exposes it as `POST /simulate`; results are hypothetical
+comparisons, not forecasts, and never raise alerts. (`what_if()` is the older fixed rainfall-scenario table.)
+
+## Estimate versus prediction
+
+A score ranks drainage-related risk from a visual blockage estimate, an assumed or supplied rainfall figure and
+(synthetic) historical context. It is not calibrated against real flood outcomes and does not predict whether, when
+or where flooding will happen, nor its extent.
 
 ## Trend
 

@@ -1,0 +1,65 @@
+{
+  "processing_status": "completed",
+  "vision": {
+    "drain_id": "D-001",
+    "blockage_detected": true,
+    "blockage_percentage": 90.0,
+    "confidence": null,
+    "location": null,
+    "timestamp": "2026-10-09T00:00:00Z",
+    "method": "SYNTHETIC MOCK FIXTURE (no image analysed)",
+    "warnings": [
+      "Mock fixture: invented vision output used to exercise the interface. Not a real finding."
+    ]
+  },
+  "risk": {
+    "flood_risk_score": 94,
+    "risk_level": "CRITICAL",
+    "risk_factors": [
+      "Blockage severity: SEVERE (90%)",
+      "Rainfall: VERY_HEAVY (150 mm/day)",
+      "Historical vulnerability: HIGH"
+    ],
+    "recommendation": "Urgent intervention immediately",
+    "warnings": [
+      "Contains SYNTHETIC data - not real city measurements."
+    ],
+    "inputs": {
+      "rainfall_category": "VERY_HEAVY",
+      "rainfall_source": "PROVIDED",
+      "history_category": "HIGH",
+      "synthetic_data": true
+    },
+    "trend": {
+      "direction": "NEW",
+      "change": null,
+      "previous_score": null
+    }
+  },
+  "rainfall": {
+    "mm_per_day": 150,
+    "category": "VERY_HEAVY",
+    "source": "REQUEST"
+  },
+  "alert": {
+    "triggered": true,
+    "level": "CRITICAL",
+    "title": "CRITICAL drainage-related flood risk",
+    "message": "Estimated risk score 94/100 (experimental estimate). Based partly on SYNTHETIC data.",
+    "recommendation": "Urgent intervention immediately"
+  },
+  "drain": {
+    "drain_id": "D-001",
+    "lat": 12.975,
+    "lon": 77.59,
+    "processing_status": "completed",
+    "risk_level": "CRITICAL",
+    "flood_risk_score": 94,
+    "blockage_percentage": 90.0,
+    "synthetic": true,
+    "recommendation": "Urgent intervention immediately",
+    "rainfall_source": "REQUEST",
+    "synthetic_history": true
+  },
+  "error": null
+}

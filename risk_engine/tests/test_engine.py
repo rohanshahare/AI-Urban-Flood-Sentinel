@@ -1,4 +1,6 @@
+import math
 import unittest
+from fractions import Fraction
 from unittest.mock import patch
 
 from risk_engine import engine
@@ -128,6 +130,69 @@ class SafetyFloorTests(unittest.TestCase):
             r = run({"blockage_percentage": 80, "rainfall": "HEAVY", "history": "LOW"})
         self.assertEqual(r["risk_level"], "HIGH")
         self.assertTrue(warned(r, "safety rule"))
+
+
+
+class FormulaTests(unittest.TestCase):
+    RAIN = {"NONE": Fraction(0), "LIGHT": Fraction(1, 5), "MODERATE": Fraction(1, 2),
+            "HEAVY": Fraction(4, 5), "VERY_HEAVY": Fraction(1), "EXTREMELY_HEAVY": Fraction(1)}
+    HIST = {None: None, "LOW": Fraction(3, 10), "MEDIUM": Fraction(3, 5), "HIGH": Fraction(9, 10)}
+
+    def test_weights_are_45_35_20(self):
+        self.assertEqual(engine.WEIGHTS, {"blockage": 0.45, "rainfall": 0.35, "history": 0.20})
+
+    def test_matches_independent_exact_half_up_calculation(self):
+        # Independent re-computation with Fractions over the whole input grid, including exact
+        # .5 ties (which float arithmetic used to round inconsistently).
+        for b in range(101):
+            for rain, rv in self.RAIN.items():
+                for hist, hv in self.HIST.items():
+                    parts = [(Fraction(b, 100), Fraction(45, 100)), (rv, Fraction(35, 100))]
+                    if hv is not None:
+                        parts.append((hv, Fraction(20, 100)))
+                    exact = 100 * sum(v * w for v, w in parts) / sum(w for _, w in parts)
+                    got = run({"blockage_percentage": b, "rainfall": rain, "history": hist})["flood_risk_score"]
+                    self.assertEqual(got, math.floor(exact + Fraction(1, 2)), (b, rain, hist))
+
+    def test_ties_round_half_up(self):
+        # 10% blockage, NONE rain, LOW history is exactly 10.5; 8%/HEAVY/no history is exactly 39.5.
+        self.assertEqual(run({"blockage_percentage": 10, "rainfall": "NONE", "history": "LOW"})["flood_risk_score"], 11)
+        self.assertEqual(run({"blockage_percentage": 8, "rainfall": "HEAVY"})["flood_risk_score"], 40)
+
+    def test_exact_ties_at_level_boundaries_round_up_consistently(self):
+        # These inputs score exactly 25.5, 50.5 and 75.5. The old float code rounded 50.5 down
+        # (MODERATE) but 25.5 and 75.5 up; half-up now resolves every boundary tie upward.
+        cases = [((30, "NONE", "MEDIUM"), 26, "MODERATE"),
+                 ((10, "HEAVY", "HIGH"), 51, "HIGH"),
+                 ((50, "VERY_HEAVY", "HIGH"), 76, "CRITICAL")]
+        for (b, rain, hist), score, level in cases:
+            r = run({"blockage_percentage": b, "rainfall": rain, "history": hist})
+            self.assertEqual((r["flood_risk_score"], r["risk_level"]), (score, level), (b, rain, hist))
+
+    def test_small_input_changes_can_cross_a_boundary(self):
+        # Documents sensitivity: categories are hard thresholds, so 0.1 percentage point of
+        # blockage can change the level near a boundary. The UI shows the score next to the level.
+        cases = [((29.9, "NONE", "MEDIUM"), 25, "LOW"), ((30.1, "NONE", "MEDIUM"), 26, "MODERATE"),
+                 ((9.9, "HEAVY", "HIGH"), 50, "MODERATE"), ((10.0, "HEAVY", "HIGH"), 51, "HIGH")]
+        for (b, rain, hist), score, level in cases:
+            r = run({"blockage_percentage": b, "rainfall": rain, "history": hist})
+            self.assertEqual((r["flood_risk_score"], r["risk_level"]), (score, level), (b, rain, hist))
+
+    def test_score_is_monotonic_in_blockage_and_rainfall(self):
+        for hist in (None, "LOW", "HIGH"):
+            prev = -1
+            for b in range(101):
+                score = run({"blockage_percentage": b, "rainfall": "LIGHT", "history": hist})["flood_risk_score"]
+                self.assertGreaterEqual(score, prev)
+                prev = score
+            prev = -1
+            for mm in (0, 2.5, 15.6, 64.5, 115.6, 204.5):
+                score = run({"blockage_percentage": 40, "rainfall": mm, "history": hist})["flood_risk_score"]
+                self.assertGreaterEqual(score, prev)
+                prev = score
+
+    def test_fractional_blockage_is_scored(self):
+        self.assertEqual(run({"blockage_percentage": 75.3, "rainfall": "HEAVY", "history": "LOW"})["status"], "OK")
 
 
 if __name__ == "__main__":

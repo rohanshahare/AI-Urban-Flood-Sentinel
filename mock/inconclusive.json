@@ -1,0 +1,57 @@
+{
+  "processing_status": "inconclusive",
+  "vision": {
+    "drain_id": "D-005",
+    "blockage_detected": null,
+    "blockage_percentage": null,
+    "confidence": null,
+    "location": null,
+    "timestamp": "2026-10-09T00:00:00Z",
+    "method": "SYNTHETIC MOCK FIXTURE (no image analysed)",
+    "warnings": [
+      "Mock fixture: invented vision output used to exercise the interface. Not a real finding.",
+      "Drain opening is not clearly visible."
+    ]
+  },
+  "risk": {
+    "flood_risk_score": null,
+    "risk_level": null,
+    "risk_factors": [],
+    "recommendation": "Manual inspection required: the image could not be assessed reliably. This is NOT evidence that the drain is clear.",
+    "warnings": [
+      "Vision assessment inconclusive: no usable blockage percentage, so no risk score was calculated."
+    ],
+    "trend": {
+      "direction": "UNKNOWN",
+      "change": null,
+      "previous_score": null
+    },
+    "inputs": null
+  },
+  "rainfall": {
+    "mm_per_day": 40,
+    "category": null,
+    "source": "REQUEST"
+  },
+  "alert": {
+    "level": null,
+    "title": "Manual inspection required",
+    "message": "The image could not be assessed reliably; no flood-risk level is available.",
+    "recommendation": "Manual inspection required: the image could not be assessed reliably. This is NOT evidence that the drain is clear.",
+    "triggered": false
+  },
+  "drain": {
+    "drain_id": "D-005",
+    "lat": 12.98,
+    "lon": 77.599,
+    "processing_status": "inconclusive",
+    "risk_level": null,
+    "flood_risk_score": null,
+    "blockage_percentage": null,
+    "synthetic": true,
+    "recommendation": "Manual inspection required: the image could not be assessed reliably. This is NOT evidence that the drain is clear.",
+    "rainfall_source": "REQUEST",
+    "synthetic_history": null
+  },
+  "error": null
+}

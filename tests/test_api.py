@@ -17,7 +17,8 @@ TOP_KEYS = {"processing_status", "vision", "risk", "rainfall", "alert", "drain",
 VISION_KEYS = set(pipeline.VISION_FIELDS)
 RISK_KEYS = {"flood_risk_score", "risk_level", "risk_factors", "recommendation", "warnings", "trend", "inputs"}
 ALERT_KEYS = {"triggered", "level", "title", "message", "recommendation"}
-DRAIN_KEYS = {"drain_id", "lat", "lon", "processing_status", "risk_level", "flood_risk_score", "blockage_percentage", "synthetic"}
+DRAIN_KEYS = {"drain_id", "lat", "lon", "processing_status", "risk_level", "flood_risk_score", "blockage_percentage", "synthetic",
+              "recommendation", "rainfall_source", "synthetic_history"}
 
 
 def model_result(**overrides):

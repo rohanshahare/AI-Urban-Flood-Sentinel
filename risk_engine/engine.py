@@ -1,4 +1,7 @@
 
+from fractions import Fraction
+from math import floor
+
 from .config import (
     WEIGHTS,
     RAIN_VALUE,
@@ -20,6 +23,11 @@ from .normalise import (
     normalize_rainfall,
     normalize_history,
 )
+
+
+def _exact(value):
+    """Exact decimal value of a number as written (0.45 -> 45/100), avoiding float drift."""
+    return Fraction(str(value))
 
 
 def blockage_label(value):
@@ -121,20 +129,22 @@ def assess_flood_risk(data: dict) -> dict:
 
     # 4. Weighted score using available factors
     parts = [
-        (blockage, WEIGHTS["blockage"]),
-        (rain_value, WEIGHTS["rainfall"]),
+        (_exact(raw_blockage) / 100, _exact(WEIGHTS["blockage"])),
+        (_exact(rain_value), _exact(WEIGHTS["rainfall"])),
     ]
 
     if history_value is not None:
-        parts.append((history_value, WEIGHTS["history"]))
+        parts.append((_exact(history_value), _exact(WEIGHTS["history"])))
 
     total_weight = sum(weight for _, weight in parts)
 
-    score = 100 * sum(
+    exact_score = 100 * sum(
         value * weight for value, weight in parts
     ) / total_weight
 
-    score = max(0, min(100, int(round(score))))
+    # Exact arithmetic with half-up rounding, so a score of x.5 always rounds
+    # the same way (float arithmetic made ties round inconsistently).
+    score = max(0, min(100, floor(exact_score + Fraction(1, 2))))
 
     # 5. Determine risk level
     risk_level = next(

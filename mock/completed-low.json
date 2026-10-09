@@ -1,0 +1,65 @@
+{
+  "processing_status": "completed",
+  "vision": {
+    "drain_id": "D-002",
+    "blockage_detected": true,
+    "blockage_percentage": 10.0,
+    "confidence": null,
+    "location": null,
+    "timestamp": "2026-10-09T00:00:00Z",
+    "method": "SYNTHETIC MOCK FIXTURE (no image analysed)",
+    "warnings": [
+      "Mock fixture: invented vision output used to exercise the interface. Not a real finding."
+    ]
+  },
+  "risk": {
+    "flood_risk_score": 18,
+    "risk_level": "LOW",
+    "risk_factors": [
+      "Blockage severity: LOW (10%)",
+      "Rainfall: LIGHT (5 mm/day)",
+      "Historical vulnerability: LOW"
+    ],
+    "recommendation": "Routine inspection",
+    "warnings": [
+      "Contains SYNTHETIC data - not real city measurements."
+    ],
+    "inputs": {
+      "rainfall_category": "LIGHT",
+      "rainfall_source": "PROVIDED",
+      "history_category": "LOW",
+      "synthetic_data": true
+    },
+    "trend": {
+      "direction": "NEW",
+      "change": null,
+      "previous_score": null
+    }
+  },
+  "rainfall": {
+    "mm_per_day": 5,
+    "category": "LIGHT",
+    "source": "REQUEST"
+  },
+  "alert": {
+    "triggered": false,
+    "level": "LOW",
+    "title": "LOW drainage-related flood risk",
+    "message": "Estimated risk score 18/100 (experimental estimate). Based partly on SYNTHETIC data.",
+    "recommendation": "Routine inspection"
+  },
+  "drain": {
+    "drain_id": "D-002",
+    "lat": 12.977,
+    "lon": 77.605,
+    "processing_status": "completed",
+    "risk_level": "LOW",
+    "flood_risk_score": 18,
+    "blockage_percentage": 10.0,
+    "synthetic": true,
+    "recommendation": "Routine inspection",
+    "rainfall_source": "REQUEST",
+    "synthetic_history": true
+  },
+  "error": null
+}

@@ -1,0 +1,93 @@
+[
+  {
+    "drain_id": "D-001",
+    "lat": 12.975,
+    "lon": 77.59,
+    "processing_status": "completed",
+    "risk_level": "CRITICAL",
+    "flood_risk_score": 91,
+    "blockage_percentage": 85.0,
+    "synthetic": true,
+    "recommendation": "Urgent intervention immediately",
+    "rainfall_source": "SYNTHETIC_DEMO",
+    "synthetic_history": true
+  },
+  {
+    "drain_id": "D-002",
+    "lat": 12.977,
+    "lon": 77.605,
+    "processing_status": "completed",
+    "risk_level": "LOW",
+    "flood_risk_score": 18,
+    "blockage_percentage": 10.0,
+    "synthetic": true,
+    "recommendation": "Routine inspection",
+    "rainfall_source": "SYNTHETIC_DEMO",
+    "synthetic_history": true
+  },
+  {
+    "drain_id": "D-003",
+    "lat": 12.969,
+    "lon": 77.601,
+    "processing_status": "completed",
+    "risk_level": "HIGH",
+    "flood_risk_score": 60,
+    "blockage_percentage": 55.0,
+    "synthetic": true,
+    "recommendation": "Priority cleaning within 24 hours",
+    "rainfall_source": "SYNTHETIC_DEMO",
+    "synthetic_history": true
+  },
+  {
+    "drain_id": "D-005",
+    "lat": 12.98,
+    "lon": 77.599,
+    "processing_status": "inconclusive",
+    "risk_level": null,
+    "flood_risk_score": null,
+    "blockage_percentage": null,
+    "synthetic": true,
+    "recommendation": "Manual inspection required: no usable blockage estimate in this demo record.",
+    "rainfall_source": "SYNTHETIC_DEMO",
+    "synthetic_history": null
+  },
+  {
+    "drain_id": "D-006",
+    "lat": 12.965,
+    "lon": 77.588,
+    "processing_status": "completed",
+    "risk_level": "HIGH",
+    "flood_risk_score": 62,
+    "blockage_percentage": 35.0,
+    "synthetic": true,
+    "recommendation": "Priority cleaning within 24 hours",
+    "rainfall_source": "SYNTHETIC_DEMO",
+    "synthetic_history": true
+  },
+  {
+    "drain_id": "D-010",
+    "lat": null,
+    "lon": null,
+    "processing_status": "completed",
+    "risk_level": "LOW",
+    "flood_risk_score": 22,
+    "blockage_percentage": 20.0,
+    "synthetic": true,
+    "recommendation": "Routine inspection",
+    "rainfall_source": "SYNTHETIC_DEMO",
+    "synthetic_history": true
+  },
+  {
+    "drain_id": "D-017",
+    "lat": 12.972,
+    "lon": 77.595,
+    "processing_status": "completed",
+    "risk_level": "CRITICAL",
+    "flood_risk_score": 83,
+    "blockage_percentage": 82.0,
+    "synthetic": true,
+    "recommendation": "Urgent intervention immediately",
+    "rainfall_source": "SYNTHETIC_DEMO",
+    "synthetic_history": true
+  }
+]

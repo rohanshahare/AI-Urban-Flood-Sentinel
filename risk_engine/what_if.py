@@ -30,6 +30,39 @@ def what_if(drain: dict):
     return rows
 
 
+_COMPARED_INPUTS = ("blockage_percentage", "rainfall")
+
+
+def simulate(baseline: dict, scenario: dict) -> dict:
+    """Score a drain twice, as-is and with `scenario` inputs overridden.
+
+    Uses the real scoring path (assess_with_history) and never touches the
+    trend log, so a hypothetical run cannot change recorded history.
+    """
+    base = assess_with_history(baseline)
+    hypo = assess_with_history({**baseline, **scenario})
+    if base["status"] != "OK" or hypo["status"] != "OK":
+        raise ValueError("; ".join(base["warnings"] + hypo["warnings"]))
+
+    merged = {**baseline, **scenario}
+    changed = [
+        {"input": name, "from": baseline.get(name), "to": merged.get(name)}
+        for name in _COMPARED_INPUTS
+        if merged.get(name) != baseline.get(name)
+    ]
+    return {
+        "baseline": base,
+        "scenario": hypo,
+        "change": {
+            "score_delta": hypo["flood_risk_score"] - base["flood_risk_score"],
+            "level_from": base["risk_level"],
+            "level_to": hypo["risk_level"],
+            "level_changed": base["risk_level"] != hypo["risk_level"],
+            "changed_inputs": changed,
+        },
+    }
+
+
 if __name__ == "__main__":
     drain = {
         "drain_id": "D-017",

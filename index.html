@@ -3,54 +3,168 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Maverick REVA</title>
-
-    <!-- Leaflet CSS -->
+    <title>AI Urban Flood Sentinel</title>
+    <meta name="description" content="AI-assisted drain inspection: image-based blockage assessment and explainable flood-risk triage.">
+    <!-- Leaflet (CDN). Everything else is local; the dashboard still works if Leaflet cannot load. -->
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
-
-    <!-- Tailwind CSS -->
-    <script src="https://cdn.tailwindcss.com"></script>
-
     <link rel="stylesheet" href="css/styles.css">
 </head>
 <body>
-    <header class="page-header">
-        <h1>AI Urban Flood Sentinel</h1>
-        <p class="notice">Experimental prototype. Blockage is a rough visual estimate; rainfall is operator-entered or assumed (no live feed); drain history and the demo drains are <strong>SYNTHETIC</strong>.</p>
+
+    <header class="app-header">
+        <div class="brand">
+            <div class="brand-mark" aria-hidden="true">
+                <svg viewBox="0 0 24 24" fill="none" stroke="#7dd3fc" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M12 3c-3.2 4.4-6 7.6-6 11a6 6 0 0 0 12 0c0-3.4-2.8-6.6-6-11z"/><path d="M9 14h6M9 17h6"/>
+                </svg>
+            </div>
+            <div>
+                <h1>AI Urban Flood Sentinel</h1>
+                <p>Drain-inspection triage · image-based blockage assessment + explainable flood-risk scoring · experimental, not a flood forecast</p>
+            </div>
+        </div>
+        <div class="header-status">
+            <span id="demo-badge" class="mode-badge hidden" title="Opened with ?mock=1: synthetic fixtures, no model or backend calls">Mock data</span>
+            <span class="health" role="status"><span id="health-dot" class="health-dot"></span><span id="health-label">Checking backend…</span></span>
+        </div>
     </header>
 
-    <main class="layout">
-        <section class="panel">
-            <h2>Analyse a drain image</h2>
-            <form id="analyze-form">
-                <label>Image <input type="file" name="image" accept="image/*" required></label>
-                <label>Drain ID <input type="text" name="drain_id" placeholder="e.g. D-017"></label>
-                <div class="row">
-                    <label>Latitude <input type="text" name="lat" inputmode="decimal"></label>
-                    <label>Longitude <input type="text" name="lon" inputmode="decimal"></label>
+    <!-- Shown only when the backend reports a triggered alert for the result on screen -->
+    <div id="alert-banner" class="alert-banner hidden" role="alert"></div>
+
+    <section class="overview" aria-label="Drain overview">
+        <div class="kpis">
+            <div class="kpi" id="kpi-box-total"><span class="kpi-label">Drains</span><span class="kpi-value" id="kpi-total">–</span></div>
+            <div class="kpi risk-CRITICAL" id="kpi-box-critical"><span class="kpi-label">Critical</span><span class="kpi-value" id="kpi-critical">–</span></div>
+            <div class="kpi risk-HIGH" id="kpi-box-high"><span class="kpi-label">High</span><span class="kpi-value" id="kpi-high">–</span></div>
+            <div class="kpi risk-MODERATE" id="kpi-box-moderate"><span class="kpi-label">Moderate</span><span class="kpi-value" id="kpi-moderate">–</span></div>
+            <div class="kpi risk-LOW" id="kpi-box-low"><span class="kpi-label">Low</span><span class="kpi-value" id="kpi-low">–</span></div>
+            <div class="kpi risk-UNKNOWN" id="kpi-box-inconclusive"><span class="kpi-label">Needs inspection</span><span class="kpi-value" id="kpi-inconclusive">–</span></div>
+        </div>
+        <p id="kpi-note" class="overview-note">Loading drain records…</p>
+    </section>
+
+    <div class="workspace">
+
+        <!-- Left: analyse an image, result details, what-if -->
+        <aside class="col col-left" aria-label="Analysis">
+            <section class="panel">
+                <h2 class="panel-title">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 16V4M7 9l5-5 5 5M4 20h16"/></svg>
+                    Analyse a drain image
+                </h2>
+                <form id="upload-form" novalidate>
+                    <label class="dropzone" id="dropzone" for="upload-image">
+                        <input type="file" id="upload-image" class="visually-hidden" accept="image/jpeg,image/png,image/webp,image/gif,image/bmp">
+                        <img id="image-preview" class="hidden" alt="Selected drain image">
+                        <span id="dropzone-empty">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="2"/><circle cx="9" cy="10" r="1.6"/><path d="M21 16l-5-5-8 8"/></svg>
+                            <strong>Choose a drain photo</strong>
+                            <small>or drop it here</small><small>JPEG, PNG, WebP, GIF or BMP · up to 10 MB</small>
+                        </span>
+                        <span id="file-meta" class="file-meta hidden"></span>
+                    </label>
+                    <div class="sample-row">
+                        Try a sample:
+                        <button type="button" id="sample-blocked" class="btn-link">Blocked drain</button>
+                        <button type="button" id="sample-clear" class="btn-link">Clear drain</button>
+                    </div>
+
+                    <label class="field">
+                        <span class="field-label">Drain ID <small>(optional; needed to list and map the result)</small></span>
+                        <input id="drain-id" class="input" list="drain-ids" autocomplete="off" placeholder="e.g. DEMO-1">
+                        <datalist id="drain-ids"></datalist>
+                    </label>
+
+                    <details class="more">
+                        <summary>Location and rainfall (optional)</summary>
+                        <div class="grid-2">
+                            <label class="field"><span class="field-label">Latitude</span><input id="lat" class="input" inputmode="decimal"></label>
+                            <label class="field"><span class="field-label">Longitude</span><input id="lon" class="input" inputmode="decimal"></label>
+                        </div>
+                        <p>Click the map to fill these in. Left blank, no location is invented.</p>
+                        <label class="field"><span class="field-label">Rainfall (mm/day)</span><input id="rainfall" class="input" inputmode="decimal"></label>
+                        <p>There is no live rainfall feed. Left blank, a cautious default is assumed and labelled.</p>
+                    </details>
+
+                    <p id="form-message" class="form-message hidden" role="alert"></p>
+                    <button type="submit" id="submit-btn" class="btn btn-primary" disabled>Run analysis</button>
+                    <p id="submit-hint" class="submit-hint">Choose an image to enable analysis.</p>
+                </form>
+            </section>
+
+            <section class="panel" aria-live="polite">
+                <h2 class="panel-title">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 3h7l5 5v13H8z"/><path d="M15 3v5h5M11 13h6M11 17h4"/></svg>
+                    Analysis details
+                </h2>
+                <div id="detail-waiting" class="state-empty">Select a drain on the map or in the queue, or analyse an image.</div>
+                <div id="detail-loading" class="state-loading hidden"><span class="spinner dark" aria-hidden="true"></span><p>Working…</p></div>
+                <div id="detail-error" class="hidden">
+                    <div class="state-error">
+                        <h3>Processing error</h3>
+                        <div class="code" id="detail-error-code"></div>
+                        <p id="detail-error-message"></p>
+                        <button id="detail-error-retry" type="button" class="btn btn-danger">Retry</button>
+                    </div>
                 </div>
-                <label>Rainfall (mm/day, optional) <input type="text" name="rainfall_mm" inputmode="decimal"></label>
-                <button type="submit" id="submit-btn">Analyse</button>
-            </form>
-            <div id="alert-box" aria-live="polite"></div>
-            <div id="result"></div>
-        </section>
+                <div id="detail-body" class="hidden"></div>
+            </section>
 
-        <section class="panel">
-            <h2>Drains</h2>
+            <section id="sim-panel" class="panel sim hidden" aria-live="polite">
+                <h2 class="panel-title">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M4 7h9M17 7h3M4 17h3M11 17h9"/><circle cx="15" cy="7" r="2"/><circle cx="9" cy="17" r="2"/></svg>
+                    What-if simulator <span class="hypo-tag">HYPOTHETICAL</span>
+                </h2>
+                <p class="sim-intro">Re-scores this drain with different blockage or rainfall using the same risk engine. Not a forecast; never raises an alert; the real result is not changed.</p>
+                <label class="slider"><span class="slider-head">Blockage <span><output id="sim-blockage-out"></output>%</span></span>
+                    <input type="range" id="sim-blockage" min="0" max="100" step="1" aria-label="Hypothetical blockage, percent"></label>
+                <label class="slider"><span class="slider-head">Rainfall <span><output id="sim-rain-out"></output> mm/day</span></span>
+                    <input type="range" id="sim-rain" min="0" max="250" step="1" aria-label="Hypothetical rainfall, millimetres per day"></label>
+                <div class="sim-actions">
+                    <button id="sim-run" type="button" class="btn btn-hypo">Run scenario</button>
+                    <button id="sim-reset" type="button" class="btn btn-secondary">Reset to baseline</button>
+                </div>
+                <div id="sim-result" class="sim-result"></div>
+            </section>
+        </aside>
+
+        <main class="col col-map" aria-label="Drain map">
             <div id="map"></div>
-            <div id="drain-list"></div>
-        </section>
-    </main>
+        </main>
 
-    <!-- Leaflet JS -->
+        <!-- Right: inspection queue (every drain, including those without coordinates) -->
+        <aside class="col col-right" aria-label="Inspection queue">
+            <section class="panel">
+                <h2 class="panel-title">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M9 6h11M9 12h11M9 18h11M4 6h.01M4 12h.01M4 18h.01"/></svg>
+                    Inspection queue
+                </h2>
+                <p class="panel-hint">Ordered by the backend risk level. Flags show what each level rests on.</p>
+                <div id="drain-list"><p class="state-empty">Loading…</p></div>
+            </section>
+        </aside>
+    </div>
+
+    <footer class="app-footer">
+        Scores are experimental composite estimates, not flood probabilities. Sample images:
+        <a href="samples/sources.md" target="_blank" rel="noopener">sources and licences</a>.
+    </footer>
+
+    <!-- Mock-mode controls: shown only when the page is opened with ?mock=1 -->
+    <div id="dev-tools" class="dev-tools hidden">
+        <h3>Mock mode (synthetic fixtures)</h3>
+        <label for="fixture-select" class="field-label">Fixture to show / return from "Run analysis"</label>
+        <select id="fixture-select" class="input">
+            <option value="drains">All drains (drains.json)</option>
+            <option value="completed-low">Completed: low</option>
+            <option value="completed-critical">Completed: critical</option>
+            <option value="inconclusive">Inconclusive</option>
+            <option value="error">Error</option>
+        </select>
+    </div>
+
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
-
-    <script src="js/config.js"></script>
-    <script src="js/api.js"></script>
-    <script src="js/state.js"></script>
-    <script src="js/map.js"></script>
-    <script src="js/ui.js"></script>
-    <script src="js/alerts.js"></script>
+    <script type="module" src="js/main.js"></script>
 </body>
 </html>

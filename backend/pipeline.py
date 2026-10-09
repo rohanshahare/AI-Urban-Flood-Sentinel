@@ -10,6 +10,7 @@ import re
 from typing import Any
 
 from risk_engine.trend import assess_with_trend
+from risk_engine.what_if import simulate
 
 COMPLETED = "completed"
 INCONCLUSIVE = "inconclusive"
@@ -80,6 +81,27 @@ def parse_rainfall(text: str | None) -> float | None:
     return value
 
 
+def _json_number(name: str, value: Any, nullable: bool = False) -> float | None:
+    if value is None and nullable:
+        return None
+    if isinstance(value, bool) or not isinstance(value, (int, float)) or not math.isfinite(value):
+        raise InputError(f"{name} must be a finite number.")
+    return float(value)
+
+
+def parse_scenario(body: Any, name: str) -> dict[str, float | None]:
+    """Validate one side of a /simulate request: blockage 0-100, rainfall >= 0 or null."""
+    if not isinstance(body, dict):
+        raise InputError(f"{name} must be an object.")
+    blockage = _json_number(f"{name}.blockage_percentage", body.get("blockage_percentage"))
+    if not 0 <= blockage <= 100:
+        raise InputError(f"{name}.blockage_percentage must be between 0 and 100.")
+    rainfall = _json_number(f"{name}.rainfall_mm", body.get("rainfall_mm"), nullable=True)
+    if rainfall is not None and rainfall < 0:
+        raise InputError(f"{name}.rainfall_mm must not be negative.")
+    return {"blockage_percentage": blockage, "rainfall": rainfall}
+
+
 # --------------------------------------------------------------- shapes
 
 def _empty_vision() -> dict[str, Any]:
@@ -98,16 +120,27 @@ def _empty_risk(recommendation: str | None = None, warnings: list[str] | None = 
     }
 
 
+def risk_view(result: dict[str, Any]) -> dict[str, Any]:
+    """Public subset of a risk-engine result (no trend: the caller decides)."""
+    return {k: result[k] for k in (
+        "flood_risk_score", "risk_level", "risk_factors", "recommendation", "warnings", "inputs",
+    )}
+
+
 def _empty_alert() -> dict[str, Any]:
     return dict.fromkeys(("level", "title", "message", "recommendation")) | {"triggered": False}
 
 
-def drain_record(drain_id, lat, lon, status, risk_level, score, blockage, synthetic) -> dict[str, Any]:
+def drain_record(drain_id, lat, lon, status, risk_level, score, blockage, synthetic, *,
+                 recommendation=None, rainfall_source=None, synthetic_history=None) -> dict[str, Any]:
+    """Summary of one drain. The last three fields let a list show why and on what inputs a level rests:
+    rainfall_source is REQUEST | ASSUMED_DEFAULT | SYNTHETIC_DEMO | None; synthetic_history is bool or None."""
     return {
         "drain_id": drain_id, "lat": lat, "lon": lon,
         "processing_status": status, "risk_level": risk_level,
         "flood_risk_score": score, "blockage_percentage": blockage,
-        "synthetic": synthetic,
+        "synthetic": synthetic, "recommendation": recommendation,
+        "rainfall_source": rainfall_source, "synthetic_history": synthetic_history,
     }
 
 
@@ -174,7 +207,9 @@ def process_vision_result(
             message="The image could not be assessed reliably; no flood-risk level is available.",
             recommendation=MANUAL_INSPECTION,
         )
-        drain = drain_record(drain_id, lat, lon, INCONCLUSIVE, None, None, None, False)
+        drain = drain_record(drain_id, lat, lon, INCONCLUSIVE, None, None, None, False,
+                             recommendation=MANUAL_INSPECTION,
+                             rainfall_source="REQUEST" if rainfall_mm is not None else None)
         return envelope(INCONCLUSIVE, vision, risk, request_rain, alert, drain)
 
     result = assess_with_trend({
@@ -186,10 +221,7 @@ def process_vision_result(
     if result["status"] != "OK":
         raise RuntimeError("; ".join(result["warnings"]) or "risk engine rejected the input")
 
-    risk = {k: result[k] for k in (
-        "flood_risk_score", "risk_level", "risk_factors",
-        "recommendation", "warnings", "trend", "inputs",
-    )}
+    risk = {**risk_view(result), "trend": result["trend"]}
     rain_inputs = result["inputs"]
     rainfall = {
         "mm_per_day": rainfall_mm,
@@ -199,5 +231,25 @@ def process_vision_result(
     drain = drain_record(
         drain_id, lat, lon, COMPLETED, risk["risk_level"],
         risk["flood_risk_score"], percentage, False,
+        recommendation=risk["recommendation"], rainfall_source=rainfall["source"],
+        synthetic_history=rain_inputs["synthetic_data"],
     )
     return envelope(COMPLETED, vision, risk, rainfall, _alert_for(risk), drain)
+
+
+def simulation_response(body: Any) -> dict[str, Any]:
+    """Hypothetical what-if comparison. Never an alert, never stored, never logged to trend."""
+    if not isinstance(body, dict):
+        raise InputError("Request body must be a JSON object.")
+    drain_id = parse_drain_id(body.get("drain_id") if isinstance(body.get("drain_id"), str) else None)
+    baseline = parse_scenario(body.get("baseline"), "baseline")
+    scenario = parse_scenario(body.get("scenario"), "scenario")
+    result = simulate({"drain_id": drain_id, **baseline}, scenario)
+    return {
+        "simulation": True,
+        "label": "HYPOTHETICAL SIMULATION - not a prediction and not an alert.",
+        "drain_id": drain_id,
+        "baseline": risk_view(result["baseline"]),
+        "scenario": risk_view(result["scenario"]),
+        "change": result["change"],
+    }
