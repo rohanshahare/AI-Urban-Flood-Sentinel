@@ -1,0 +1,19 @@
+{
+  "drain_id": "D-LOW",
+  "timestamp": "2026-10-09T10:00:00Z",
+  "location": { "lat": 12.971598, "lng": 77.594562 },
+  "method": "DEMO",
+  "processing_status": "completed",
+  "result": {
+    "score": 0.1,
+    "level": "low",
+    "confidence": 0.98
+  },
+  "recommendation": "Routine monitoring.",
+  "alert": {
+    "triggered": false,
+    "reason": null
+  },
+  "error": null
+}
+

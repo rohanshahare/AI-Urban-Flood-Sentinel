@@ -1,0 +1,22 @@
+{
+  "drain_id": "D-ERR",
+  "timestamp": "2026-10-09T10:15:00Z",
+  "location": { "lat": 12.974598, "lng": 77.597562 },
+  "method": "DEMO",
+  "processing_status": "error",
+  "result": {
+    "score": null,
+    "level": null,
+    "confidence": null
+  },
+  "recommendation": null,
+  "alert": {
+    "triggered": false,
+    "reason": null
+  },
+  "error": {
+    "code": "500",
+    "message": "Failed to process image data from camera."
+  }
+}
+

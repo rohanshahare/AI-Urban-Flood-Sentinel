@@ -3,25 +3,189 @@
 <head>
     <meta charset="UTF-8">
     <title>Maverick REVA</title>
-    
     <!-- Leaflet CSS -->
-    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
-    
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin="" />
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
-    
     <link rel="stylesheet" href="css/styles.css">
 </head>
-<body>
+<body class="bg-gray-100 flex flex-col h-screen">
+
+    <!-- ── Dev Tools (mock only, hidden before demo) ───────────────────────── -->
+    <div id="dev-tools" class="hidden fixed bottom-4 right-4 bg-white p-4 shadow-lg rounded border border-gray-300 z-[9999]">
+        <h3 class="font-bold mb-2 text-sm text-gray-800">Dev Tools (Mock Mode)</h3>
+        <select id="fixture-select" class="border border-gray-300 p-2 text-sm rounded w-full bg-white text-black">
+            <option value="drains">All Drains (drains.json)</option>
+            <option value="completed-low">Completed: Low</option>
+            <option value="completed-critical">Completed: Critical</option>
+            <option value="inconclusive">Inconclusive</option>
+            <option value="error">Error</option>
+        </select>
+    </div>
+
+    <!-- ── Alert Banner (starts hidden; only shown after analyze() returns triggered:true) -->
+    <div id="alert-banner" class="hidden w-full bg-red-600 text-white px-4 py-3 text-center font-bold shadow-md z-50 text-sm"></div>
+
+    <!-- ── Header ─────────────────────────────────────────────────────────── -->
+    <header class="w-full bg-gray-900 text-white px-6 py-3 flex items-center justify-between shadow z-20 flex-shrink-0">
+        <div class="flex items-center gap-3">
+            <span class="font-bold text-lg tracking-wide">Maverick REVA</span>
+            <!-- DEMO badge: visible only when USE_MOCK = true -->
+            <span id="demo-badge" class="hidden bg-yellow-400 text-yellow-900 text-xs font-bold px-2 py-0.5 rounded uppercase tracking-wider">
+                DEMO / SYNTHETIC DATA
+            </span>
+        </div>
+        <div class="flex items-center text-xs text-gray-300">
+            <span id="health-dot" class="w-2.5 h-2.5 rounded-full bg-gray-500 inline-block mr-1.5"></span>
+            <span id="health-label">checking…</span>
+        </div>
+    </header>
+
+    <!-- ── KPI Strip ──────────────────────────────────────────────────────── -->
+    <div class="w-full bg-white shadow px-4 py-3 flex justify-around items-center border-b overflow-x-auto flex-shrink-0">
+        <div class="text-center min-w-[70px]">
+            <div class="text-xs text-gray-500 uppercase tracking-wider">Total</div>
+            <div id="kpi-total" class="text-2xl font-bold text-gray-800">0</div>
+        </div>
+        <div class="text-center min-w-[70px]">
+            <div class="text-xs text-gray-500 uppercase tracking-wider">Critical</div>
+            <div id="kpi-critical" class="text-2xl font-bold text-red-600">0</div>
+        </div>
+        <div class="text-center min-w-[70px]">
+            <div class="text-xs text-gray-500 uppercase tracking-wider">High</div>
+            <div id="kpi-high" class="text-2xl font-bold text-orange-500">0</div>
+        </div>
+        <div class="text-center min-w-[70px]">
+            <div class="text-xs text-gray-500 uppercase tracking-wider">Moderate</div>
+            <div id="kpi-moderate" class="text-2xl font-bold text-yellow-500">0</div>
+        </div>
+        <div class="text-center min-w-[70px]">
+            <div class="text-xs text-gray-500 uppercase tracking-wider">Low</div>
+            <div id="kpi-low" class="text-2xl font-bold text-green-600">0</div>
+        </div>
+        <div class="text-center min-w-[100px]">
+            <div class="text-xs text-gray-500 uppercase tracking-wider">Needs Insp.</div>
+            <div id="kpi-inconclusive" class="text-2xl font-bold text-gray-500">0</div>
+        </div>
+    </div>
+
+    <!-- ── Main Content ───────────────────────────────────────────────────── -->
+    <div class="flex-1 flex overflow-hidden">
+
+        <!-- Sidebar -->
+        <div class="w-96 bg-white shadow-lg z-10 flex flex-col overflow-y-auto border-r flex-shrink-0">
+
+            <!-- Upload Panel -->
+            <div class="p-5 border-b bg-gray-50 flex-shrink-0">
+                <h2 class="text-base font-bold mb-3 text-gray-800">Analyze Drain Image</h2>
+                <form id="upload-form" class="space-y-3">
+
+                    <!-- Drain ID: Auto or manual -->
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Drain ID</label>
+                        <select id="drain-id-toggle" class="block w-full border-gray-300 rounded-md shadow-sm p-2 border bg-white text-sm">
+                            <option value="">Auto / none (new image)</option>
+                            <!-- Mock sentinels for dev testing -->
+                            <option value="D-001">D-001</option>
+                            <option value="critical">D-CRIT (mock critical)</option>
+                            <option value="inconclusive">D-INC (mock inconclusive)</option>
+                            <option value="error">D-ERR (mock error)</option>
+                            <option value="manual">Enter manually…</option>
+                        </select>
+                        <input type="text" id="drain-id-manual" placeholder="e.g. D-042"
+                            class="hidden mt-2 block w-full border-gray-300 rounded-md shadow-sm p-2 border text-sm">
+                    </div>
+
+                    <!-- Image picker + preview -->
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Select Image</label>
+                        <input type="file" id="upload-image"
+                            class="block w-full text-sm text-gray-500 file:mr-3 file:py-1.5 file:px-3 file:rounded file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
+                            accept="image/*">
+                        <img id="image-preview" class="hidden mt-2 rounded border border-gray-200 max-h-36 w-full object-cover" alt="Preview">
+                    </div>
+
+                    <button type="submit"
+                        class="w-full bg-blue-600 text-white py-2 px-4 rounded hover:bg-blue-700 font-semibold shadow-sm transition-colors text-sm">
+                        Run Analysis
+                    </button>
+                </form>
+            </div>
+
+            <!-- Detail Panel -->
+            <div class="p-5 flex-1">
+                <h2 class="text-base font-bold mb-3 text-gray-800">Analysis Details</h2>
+
+                <!-- State: Waiting -->
+                <div id="detail-waiting" class="text-gray-400 text-center py-10 text-sm">
+                    <p>Select a drain on the map or run an analysis to view results.</p>
+                </div>
+
+                <!-- State: Loading -->
+                <div id="detail-loading" class="hidden text-blue-600 text-center py-12">
+                    <p class="animate-pulse font-semibold text-base">Analyzing image…</p>
+                </div>
+
+                <!-- State: Success -->
+                <div id="detail-success" class="hidden space-y-3">
+                    <div class="bg-white p-4 rounded shadow-sm border border-gray-200">
+                        <div class="flex justify-between items-center mb-3">
+                            <h3 class="font-bold text-lg text-gray-800" id="detail-drain-id">—</h3>
+                            <span id="detail-level-badge" class="px-2 py-1 text-xs font-bold rounded text-white bg-gray-400">—</span>
+                        </div>
+                        <!-- DEMO/Synthetic badge shown per-result -->
+                        <div id="detail-synthetic-badge" class="hidden mb-3">
+                            <span class="bg-yellow-100 text-yellow-800 text-xs font-semibold px-2 py-0.5 rounded">DEMO / SYNTHETIC DATA</span>
+                        </div>
+                        <div class="space-y-1.5 text-sm">
+                            <p class="flex justify-between text-gray-600">
+                                <span>Risk Score</span>
+                                <span id="detail-score" class="font-mono font-medium text-gray-800"></span>
+                            </p>
+                            <p class="flex justify-between text-gray-600">
+                                <span>Confidence</span>
+                                <span id="detail-confidence" class="font-mono font-medium text-gray-800"></span>
+                            </p>
+                        </div>
+                        <div class="mt-3 pt-3 border-t">
+                            <p class="text-xs font-semibold text-gray-600 mb-1 uppercase tracking-wide">Recommendation</p>
+                            <p class="text-sm text-gray-700" id="detail-recommendation"></p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- State: Inconclusive -->
+                <div id="detail-inconclusive" class="hidden">
+                    <div class="bg-gray-100 p-4 rounded border border-gray-300">
+                        <h3 class="font-bold text-gray-800 mb-1">Inconclusive Result</h3>
+                        <p class="text-sm font-semibold text-gray-700 mb-2">Manual inspection required</p>
+                        <p class="text-sm text-gray-600" id="detail-inconclusive-recommendation"></p>
+                    </div>
+                </div>
+
+                <!-- State: Error -->
+                <div id="detail-error" class="hidden">
+                    <div class="bg-red-50 p-4 rounded border border-red-200">
+                        <h3 class="font-bold text-red-700 mb-2">Processing Error</h3>
+                        <p class="text-sm text-red-600 mb-4" id="detail-error-message"></p>
+                        <button id="detail-error-retry"
+                            class="bg-red-600 text-white py-1.5 px-4 rounded text-sm hover:bg-red-700 font-semibold">
+                            Retry
+                        </button>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
+        <!-- Map -->
+        <div id="map" class="flex-1 relative z-0"></div>
+    </div>
+
     <!-- Leaflet JS -->
-    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
-    
-    <script src="js/config.js"></script>
-    <script src="js/api.js"></script>
-    <script src="js/state.js"></script>
-    <script src="js/map.js"></script>
-    <script src="js/ui.js"></script>
-    <script src="js/alerts.js"></script>
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin=""></script>
+
+    <!-- App Entry Point -->
+    <script type="module" src="js/main.js"></script>
 </body>
 </html>
-

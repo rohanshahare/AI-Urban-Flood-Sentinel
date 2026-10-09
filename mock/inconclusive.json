@@ -1,0 +1,19 @@
+{
+  "drain_id": "D-INC",
+  "timestamp": "2026-10-09T10:10:00Z",
+  "location": { "lat": 12.973598, "lng": 77.596562 },
+  "method": "DEMO",
+  "processing_status": "inconclusive",
+  "result": {
+    "score": null,
+    "level": null,
+    "confidence": null
+  },
+  "recommendation": "Manual inspection required",
+  "alert": {
+    "triggered": false,
+    "reason": null
+  },
+  "error": null
+}
+
