@@ -15,7 +15,9 @@ urban flood-risk assessment.
 
 ## Project status
 
-Implementation is in progress during the hackathon.
+Working vertical slice: image upload -> vision (Ollama) -> risk engine -> unified response -> dashboard.
+Run and test commands, endpoints and the response contract are in `docs/api-contract.md`.
+Historical vulnerability and the demo drains are synthetic; rainfall is supplied per request (no live feed).
 
 ## Team
 
