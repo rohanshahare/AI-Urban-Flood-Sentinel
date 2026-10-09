@@ -1,0 +1,13 @@
+drain_id,location,previous_floods,past_blockages,low_lying,data_source
+D-001,Ward 1,4,6,Y,SYNTHETIC
+D-002,Ward 2,0,1,N,SYNTHETIC
+D-003,Ward 3,2,3,Y,SYNTHETIC
+D-004,Ward 4,1,4,N,SYNTHETIC
+D-005,Ward 5,0,0,N,SYNTHETIC
+D-006,Ward 6,3,5,N,SYNTHETIC
+D-007,Ward 7,1,2,Y,SYNTHETIC
+D-008,Ward 8,0,2,Y,SYNTHETIC
+D-009,Ward 9,2,1,N,SYNTHETIC
+D-010,Ward 10,0,5,N,SYNTHETIC
+D-011,Ward 11,1,1,N,SYNTHETIC
+D-017,Ward 12,3,6,Y,SYNTHETIC
