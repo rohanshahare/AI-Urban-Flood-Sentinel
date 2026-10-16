@@ -19,7 +19,9 @@ from typing import Any, BinaryIO
 
 DEFAULT_MODEL = "gemma3:12b"
 DEFAULT_OLLAMA_URL = "http://127.0.0.1:11434"
-DEFAULT_TIMEOUT_SECONDS = 180
+# CPU-only inference of the default 8 GB model on a 16 GB laptop measured up to ~6 minutes;
+# the previous 180 s default aborted with VISION_SERVICE_ERROR before the model finished.
+DEFAULT_TIMEOUT_SECONDS = 600
 DEFAULT_MAX_IMAGE_BYTES = 10 * 1024 * 1024
 
 class VisionInputError(ValueError):

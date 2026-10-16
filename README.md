@@ -51,7 +51,7 @@ results into an inspection queue, a map and a hypothetical what-if simulator, to
 4. **Open** <http://127.0.0.1:8000/>. Swagger UI: <http://127.0.0.1:8000/docs>. Health: <http://127.0.0.1:8000/health>.
 
 Optional environment variables, set in the same window before step 3: `$env:OLLAMA_URL`, `$env:VISION_MODEL`,
-`$env:VISION_TIMEOUT` (seconds, default 180).
+`$env:VISION_TIMEOUT` (seconds, default 600).
 
 **Mock mode** (rehearsal without the model or a real analysis): <http://127.0.0.1:8000/?mock=1>. It is never the
 default, shows a "Mock data" badge, prefixes alerts with `[MOCK]`, labels every result "Mock fixture: not a real
@@ -161,6 +161,21 @@ inconclusive results (there is no baseline score).
 - In-memory state: uploaded drains (max 100) and trend history (20 readings × 500 drains) reset on restart.
 - Local prototype: no authentication; CORS admits only localhost origins. Map needs internet for Leaflet and tiles.
 - A result without a drain ID is shown but not added to the queue or map.
+
+## Demonstration video
+
+- **What it shows:** a 2 min 30 s narrated walkthrough of the dashboard — KPI strip, map and inspection queue
+  (clearly labelled synthetic demo records), a fixture-backed analysis result with its score and recommended
+  action, the what-if simulator, and the inconclusive path, closing on the project's stated limitations. The
+  capture runs in visibly marked mock mode; the narration never presents the fixtures as live model results.
+- **Final MP4:** [`video_demo/AI_Urban_Flood_Sentinel_Demo.mp4`](video_demo/AI_Urban_Flood_Sentinel_Demo.mp4)
+  — 150.000 s, 1920×1080, 30 fps, H.264 + AAC (verified with `ffprobe`; see
+  [video_demo/production/validation_report.md](video_demo/production/validation_report.md)).
+- **Production assets:** [`video_demo/`](video_demo/) holds the narration script, shot list, production plan,
+  recording checklist and subtitle track; [`video_demo/production/`](video_demo/production/) holds the narration
+  audio, captions, camera plan, screen capture, render/record scripts and the validation report. Reproduction
+  steps and known limitations: [video_demo/production/README.md](video_demo/production/README.md).
+- **Recording guide:** [docs/video-demo-workflow.md](docs/video-demo-workflow.md).
 
 ## Documents
 

@@ -217,17 +217,27 @@ class LiveServer(unittest.TestCase):
         cls.thread.join(5)
 
     def test_health_stays_responsive_during_slow_inference(self):
+        # Clients are built before the timer starts: constructing an httpx.Client
+        # loads the OS trust store (~0.5-1.5 s on some Windows machines), and that
+        # cost must not be measured as server latency or contend with the parallel
+        # analyze request. Only the round trip itself is timed below.
+        post_client = httpx.Client()
+        health_client = httpx.Client()
+        self.addCleanup(post_client.close)
+        self.addCleanup(health_client.close)
         self.ollama.delay = 1.5
         result = {}
 
         def analyze():
-            result["r"] = httpx.post(f"{self.url}/analyze", files={"image": ("d.png", base.PNG, "image/png")}, timeout=20)
+            result["r"] = post_client.post(
+                f"{self.url}/analyze", files={"image": ("d.png", base.PNG, "image/png")}, timeout=20
+            )
 
         worker = threading.Thread(target=analyze)
         worker.start()
         time.sleep(0.4)  # the analysis is now blocked inside the fake model
         started = time.monotonic()
-        health = httpx.get(f"{self.url}/health", timeout=5)
+        health = health_client.get(f"{self.url}/health", timeout=5)
         elapsed = time.monotonic() - started
         worker.join(20)
         self.ollama.delay = 0

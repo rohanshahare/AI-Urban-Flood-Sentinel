@@ -6,5 +6,5 @@ const params = typeof location !== 'undefined' ? new URLSearchParams(location.se
 export const USE_MOCK = params.get('mock') === '1';
 export const API_BASE = (typeof window !== 'undefined' && window.API_BASE) || '';
 export const REQUEST_TIMEOUT_MS = 8000;
-export const ANALYZE_TIMEOUT_MS = 200000; // just above the backend's 180 s model timeout
+export const ANALYZE_TIMEOUT_MS = 620000; // just above the backend's 600 s model timeout (CPU inference can take minutes)
 export const MAX_IMAGE_BYTES = 10 * 1024 * 1024; // mirrors the backend limit

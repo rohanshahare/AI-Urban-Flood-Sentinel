@@ -1,0 +1,17 @@
+AI Urban Flood Sentinel brings drain-inspection information into one dashboard. It helps teams review images and see why a record needs attention before the crew heads out.
+
+The top cards count records by category at a glance: critical, high, moderate, low, and needs inspection. That last group preserves uncertainty for human review. All seven starting records are synthetic examples, not a live city feed.
+
+To prepare an inspection, choose a drain photo or use a sample button. The blocked-drain sample fills the preview. Entering a drain ID lets the result join the queue. Location is optional, and the map can fill coordinates. Rainfall is entered by the operator; confirm the value before analysis.
+
+Run analysis starts the selected-image workflow. This recording is in clearly marked mock mode, so its result comes from a synthetic fixture; no image is analysed. Normally, the backend sends the photo to a local vision model. If it cannot assess an image, the application reports an inconclusive result instead of calling the drain clear.
+
+Here the fixture shows a low score and a routine-inspection recommendation. Its blockage and rainfall values are synthetic, as the labels explain. In a real analysis, blockage is a rough visual estimate, not a physical measurement. The experimental score combines inputs available to the risk engine. It is not a probability of flooding. Historical vulnerability data is synthetic, and missing inputs are labelled for this example.
+
+The map shows drains with coordinates, using matching risk colours. Dashed rings identify synthetic locations. The queue groups critical and high records under Act first, unclear records under Needs manual inspection, then moderate and low records for scheduling. Selecting a queue row opens its details, recommendation, and data-source flags.
+
+The inconclusive example shows the safeguard in practice: no usable blockage estimate means no score, no alert, and a recommendation for manual inspection.
+
+The critical screen is another mock fixture. The alert appears because this fixture carries a critical backend level. Its urgent-intervention recommendation shows the suggested response. These values are synthetic, not findings from the selected photograph. In a real run, the image model's assessment would contribute to the backend result.
+
+AI Urban Flood Sentinel makes evidence easier to review and priorities easier to explain. It supports decisions with assumptions visible. Teams can choose what to inspect. Smarter inspection. Clearer priorities.

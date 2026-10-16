@@ -30,3 +30,16 @@ Thumbs.db
 
 # Vision evaluation output (contains local image paths)
 eval_results*.jsonl
+
+# Temporary local integration check (safe to delete, not part of the project)
+.tmp_frontend_check.mjs
+
+# Video production intermediates: the final MP4, planning docs, scripts and the
+# render inputs (narration, paragraph clips, the used capture) stay tracked.
+video_demo/production/check_*.png
+video_demo/production/review_*.png
+video_demo/production/*_contact.png
+video_demo/production/last_frame.png
+video_demo/production/timing_test*.wav
+video_demo/production/recordings/*
+!video_demo/production/recordings/page@d736c533230fd36565d240c14d9998dd.webm

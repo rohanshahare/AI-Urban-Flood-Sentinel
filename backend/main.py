@@ -29,7 +29,8 @@ from .demo_drains import demo_detail, demo_records
 ROOT = Path(__file__).resolve().parents[1]
 OLLAMA_URL = os.environ.get("OLLAMA_URL", DEFAULT_OLLAMA_URL)
 VISION_MODEL = os.environ.get("VISION_MODEL", DEFAULT_MODEL)
-VISION_TIMEOUT = float(os.environ.get("VISION_TIMEOUT", "180"))
+# 600 s: measured real inference on this-class hardware reaches ~355 s (CPU-only, 8 GB model).
+VISION_TIMEOUT = float(os.environ.get("VISION_TIMEOUT", "600"))
 MAX_IMAGE_BYTES = DEFAULT_MAX_IMAGE_BYTES
 MAX_UPLOADED_DRAINS = 100
 # multipart overhead allowance on top of the image limit, for the Content-Length pre-check

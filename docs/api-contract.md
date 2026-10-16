@@ -15,7 +15,7 @@ node --test "tests/js/*.test.mjs"                               # frontend tests
 ```
 
 Environment variables: `OLLAMA_URL` (default `http://127.0.0.1:11434`), `VISION_MODEL` (default `gemma3:12b`),
-`VISION_TIMEOUT` seconds (default 180). Local prototype: no authentication; CORS admits only
+`VISION_TIMEOUT` seconds (default 600). Local prototype: no authentication; CORS admits only
 `http://localhost[:port]` and `http://127.0.0.1[:port]` origins (the dashboard is served same-origin anyway).
 
 ## Endpoints

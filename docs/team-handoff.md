@@ -5,7 +5,7 @@ should review the items listed for them. Contract: `docs/api-contract.md`. Run/t
 
 ## Rohan: vision (`vision/`)
 
-- **Entry point:** `vision.analyze_drain(image, *, drain_id, location, model="gemma3:12b", ollama_url, timeout=180, max_image_bytes=10 MiB)`.
+- **Entry point:** `vision.analyze_drain(image, *, drain_id, location, model="gemma3:12b", ollama_url, timeout=600, max_image_bytes=10 MiB)`.
   Backend overrides via `OLLAMA_URL`, `VISION_MODEL`, `VISION_TIMEOUT`.
 - **Output:** `drain_id, blockage_detected, blockage_percentage, confidence (always null), location, timestamp, method, warnings`.
 - **Errors:** `VisionInputError` (bad image or metadata → HTTP 400), `VisionServiceError` (Ollama down, timeout or bad output → 502).

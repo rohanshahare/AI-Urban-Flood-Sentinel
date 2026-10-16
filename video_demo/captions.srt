@@ -1,0 +1,308 @@
+1
+00:00:00,090 --> 00:00:02,350
+AI Urban Flood Sentinel brings drain-inspection
+
+2
+00:00:02,537 --> 00:00:04,213
+information into one dashboard.
+
+3
+00:00:04,978 --> 00:00:06,566
+It helps teams review images and
+
+4
+00:00:06,616 --> 00:00:08,038
+see why a record needs attention
+
+5
+00:00:08,088 --> 00:00:09,348
+before the crew heads out.
+
+6
+00:00:09,436 --> 00:00:10,930
+The top cards count records by
+
+7
+00:00:10,980 --> 00:00:13,498
+category at a glance: critical, high,
+
+8
+00:00:13,548 --> 00:00:15,475
+moderate, low, and needs inspection.
+
+9
+00:00:16,304 --> 00:00:18,255
+That last group preserves uncertainty for
+
+10
+00:00:18,305 --> 00:00:19,256
+human review.
+
+11
+00:00:19,859 --> 00:00:21,673
+All seven starting records are synthetic
+
+12
+00:00:21,723 --> 00:00:23,804
+examples, not a live city feed.
+
+13
+00:00:23,894 --> 00:00:25,726
+To prepare an inspection, choose a
+
+14
+00:00:25,776 --> 00:00:27,254
+drain photo or use a sample
+
+15
+00:00:27,304 --> 00:00:27,918
+button.
+
+16
+00:00:28,473 --> 00:00:30,568
+The blocked-drain sample fills the preview.
+
+17
+00:00:31,244 --> 00:00:32,543
+Entering a drain ID lets the
+
+18
+00:00:32,593 --> 00:00:33,905
+result join the queue.
+
+19
+00:00:34,428 --> 00:00:36,345
+Location is optional, and the map
+
+20
+00:00:36,395 --> 00:00:37,395
+can fill coordinates.
+
+21
+00:00:38,330 --> 00:00:40,182
+Rainfall is entered by the operator;
+
+22
+00:00:40,488 --> 00:00:41,970
+confirm the value before analysis.
+
+23
+00:00:42,058 --> 00:00:44,484
+Run analysis starts the selected-image workflow.
+
+24
+00:00:45,221 --> 00:00:46,771
+This recording is in clearly marked
+
+25
+00:00:46,821 --> 00:00:48,698
+mock mode, so its result comes
+
+26
+00:00:48,748 --> 00:00:50,734
+from a synthetic fixture; no image
+
+27
+00:00:50,784 --> 00:00:51,528
+is analysed.
+
+28
+00:00:52,317 --> 00:00:54,298
+Normally, the backend sends the photo
+
+29
+00:00:54,348 --> 00:00:55,751
+to a local vision model.
+
+30
+00:00:56,311 --> 00:00:57,880
+If it cannot assess an image,
+
+31
+00:00:58,046 --> 00:01:00,281
+the application reports an inconclusive result
+
+32
+00:01:00,331 --> 00:01:01,871
+instead of calling the drain clear.
+
+33
+00:01:01,958 --> 00:01:03,186
+Here the fixture shows a low
+
+34
+00:01:03,236 --> 00:01:05,223
+score and a routine-inspection recommendation.
+
+35
+00:01:06,169 --> 00:01:07,862
+Its blockage and rainfall values are
+
+36
+00:01:07,912 --> 00:01:10,049
+synthetic, as the labels explain.
+
+37
+00:01:10,778 --> 00:01:12,673
+In a real analysis, blockage is
+
+38
+00:01:12,723 --> 00:01:14,390
+a rough visual estimate, not a
+
+39
+00:01:14,440 --> 00:01:15,450
+physical measurement.
+
+40
+00:01:16,163 --> 00:01:18,410
+The experimental score combines inputs available
+
+41
+00:01:18,460 --> 00:01:19,536
+to the risk engine.
+
+42
+00:01:20,131 --> 00:01:21,322
+It is not a probability of
+
+43
+00:01:21,372 --> 00:01:21,973
+flooding.
+
+44
+00:01:22,583 --> 00:01:25,259
+Historical vulnerability data is synthetic, and
+
+45
+00:01:25,309 --> 00:01:26,702
+missing inputs are labelled for this
+
+46
+00:01:26,752 --> 00:01:27,090
+example.
+
+47
+00:01:27,178 --> 00:01:28,912
+The map shows drains with coordinates,
+
+48
+00:01:29,381 --> 00:01:30,921
+using matching risk colours.
+
+49
+00:01:31,615 --> 00:01:33,886
+Dashed rings identify synthetic locations.
+
+50
+00:01:34,757 --> 00:01:36,080
+The queue groups critical and high
+
+51
+00:01:36,130 --> 00:01:38,637
+records under Act first, unclear records
+
+52
+00:01:38,687 --> 00:01:41,064
+under Needs manual inspection, then moderate
+
+53
+00:01:41,114 --> 00:01:42,529
+and low records for scheduling.
+
+54
+00:01:43,327 --> 00:01:44,765
+Selecting a queue row opens its
+
+55
+00:01:44,815 --> 00:01:47,290
+details, recommendation, and data-source flags.
+
+56
+00:01:47,385 --> 00:01:49,693
+The inconclusive example shows the safeguard
+
+57
+00:01:49,743 --> 00:01:52,324
+in practice: no usable blockage estimate
+
+58
+00:01:52,374 --> 00:01:54,202
+means no score, no alert, and
+
+59
+00:01:54,252 --> 00:01:56,058
+a recommendation for manual inspection.
+
+60
+00:01:56,146 --> 00:01:57,512
+The critical screen is another mock
+
+61
+00:01:57,562 --> 00:01:58,167
+fixture.
+
+62
+00:01:58,864 --> 00:02:00,564
+The alert appears because this fixture
+
+63
+00:02:00,614 --> 00:02:02,369
+carries a critical backend level.
+
+64
+00:02:02,900 --> 00:02:05,557
+Its urgent-intervention recommendation shows the suggested
+
+65
+00:02:05,607 --> 00:02:06,212
+response.
+
+66
+00:02:07,008 --> 00:02:09,385
+These values are synthetic, not findings
+
+67
+00:02:09,435 --> 00:02:10,753
+from the selected photograph.
+
+68
+00:02:11,617 --> 00:02:13,072
+In a real run, the image
+
+69
+00:02:13,122 --> 00:02:14,754
+model's assessment would contribute to the
+
+70
+00:02:14,804 --> 00:02:15,508
+backend result.
+
+71
+00:02:15,600 --> 00:02:17,559
+AI Urban Flood Sentinel makes evidence
+
+72
+00:02:17,609 --> 00:02:19,634
+easier to review and priorities easier
+
+73
+00:02:19,684 --> 00:02:20,428
+to explain.
+
+74
+00:02:21,182 --> 00:02:23,578
+It supports decisions with assumptions visible.
+
+75
+00:02:24,229 --> 00:02:25,994
+Teams can choose what to inspect.
+
+76
+00:02:26,765 --> 00:02:27,862
+Smarter inspection.
+
+77
+00:02:28,709 --> 00:02:29,400
+Clearer priorities.
+
